@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welwyn Evangelical Livestream</title>
+    <link rel="icon" type="image/png" href="logo_favicon.png">
+    <!-- hls.js for live streaming -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .logo {
+            font-size: 40px;
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .tab:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .player-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .video-js {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+        }
+        
+        .stream-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .stream-info h2 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .stream-meta {
+            display: flex;
+            gap: 20px;
+            color: #718096;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header h2 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .section-subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .stream-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .stream-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stream-thumbnail {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            position: relative;
+        }
+        
+        .stream-card-info {
+            padding: 16px;
+        }
+        
+        .stream-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .stream-details {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        
+        .badge-live {
+            background: #f56565;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .badge-recorded {
+            background: #4299e1;
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #4a5568;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .share-btn {
+            padding: 8px 16px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .share-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+        
+        .live-stream-hero {
+            position: relative;
+            min-height: 600px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .live-stream-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+        }
+        
+        .live-stream-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+            padding: 40px;
+            max-width: 800px;
+        }
+        
+        .live-stream-content h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .live-stream-content p {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #f56565;
+            color: white;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .watch-now-btn {
+            padding: 16px 40px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .watch-now-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+        
+        .no-stream-message {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            color: #4a5568;
+        }
+        
+        .no-stream-message h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .viewer-count-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .viewer-count-badge .eye-icon {
+            font-size: 20px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <img src="logo.png" alt="Welwyn Evangelical Church" style="height: 60px;">
+                <p class="subtitle">Watch livestreams and recordings</p>
+            </div>
+            <div class="nav-tabs">
+                <div class="tab active" onclick="switchTab('live')">
+                    🔴 Livestreams
+                </div>
+                <div class="tab" onclick="switchTab('recent')">
+                    🎥 Recent Recordings
+                </div>
+                <div class="tab" onclick="switchTab('recordings')">
+                    📼 Previous Recordings
+                </div>
+            </div>
+        </div>
+
+        <div id="video-wrapper" style="position: relative; display: inline-block; width: 100%;">
+            <video id="player" controls preload="auto" controlsList="noplaybackrate" style="display: none; width: 100%; background: #000;">
+                Your browser does not support HTML5 video.
+            </video>
+            <div id="viewer-badge" style="position: absolute; bottom: 60px; right: 20px; background: white; border-radius: 50%; width: 50px; height: 50px; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-weight: bold; color: black; font-size: 16px; z-index: 1000;">
+                <span id="viewer-badge-count">0</span>
+            </div>
+            <button id="stop-watching-btn" onclick="stopWatching()" style="position: absolute; bottom: 60px; left: 20px; background: #dc2626; color: white; border: 2px solid #991b1b; padding: 8px 12px; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: bold; display: none; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.3); align-items: center; gap: 6px;">
+                <span style="display: inline-block; width: 16px; height: 16px; background: white; border-radius: 50%; border: 2px solid #dc2626;"></span>
+                Stop
+            </button>
+        </div>
+
+        <!-- Live Streams Section -->
+        <div id="live-section" class="content-section active">
+            <div id="live-stream-container"></div>
+        </div>
+
+        <!-- Recent Recordings Section -->
+        <div id="recent-section" class="content-section">
+            <div class="section-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Recent Recordings</h2>
+                        <p class="section-subtitle">Recordings from recent livestreams on this platform</p>
+                    </div>
+                </div>
+            </div>
+            <div id="recent-recordings-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <p style="color: #718096;">Loading recordings...</p>
+            </div>
+        </div>
+
+        <!-- Recordings Section -->
+        <div id="recordings-section" class="content-section">
+            <div class="section-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2>Previous Recordings</h2>
+                        <p class="section-subtitle">Browse and watch sermon recordings</p>
+                    </div>
+                </div>
+            </div>
+            <div id="sermon-iframe-container" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 800px; display: flex; align-items: center; justify-content: center;">
+                <p style="color: #718096;">Loading recordings...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+        // Version 2.0 - Fixed polling interval clearing
+        const API_URL = 'http://136.112.153.78:8000';
+        const MEDIA_URL = 'http://136.112.153.78:8888';
+        let hls;
+        let socket;
+        let currentStream = null;
+        let pollingInterval = null;
+        let isVideoPlaying = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // hls.js will be initialized when stream starts
+
+            // Poll for live streams every 10 seconds
+            pollingInterval = setInterval(checkForLiveStreams, 10000);
+            checkForLiveStreams(); // Check immediately on load
+
+            // Connect to WebSocket for real-time updates
+            socket = io(API_URL);
+            
+            // Request current viewer count when connected
+            socket.on('connect', () => {
+                console.log('WebSocket connected');
+                // Request initial viewer count
+                fetch(`${API_URL}/api/streams/live`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.streams && data.streams.length > 0) {
+                            const stream = data.streams.find(s => s.streamKey === 'test-stream');
+                            if (stream) {
+                                const viewerCountDisplay = document.getElementById('viewer-count-display');
+                                if (viewerCountDisplay) {
+                                    viewerCountDisplay.textContent = stream.viewCount || 0;
+                                }
+                            }
+                        }
+                    })
+                    .catch(err => console.error('Error fetching initial viewer count:', err));
+            });
+            
+            socket.on('stream_started', (data) => {
+                console.log('New stream started:', data);
+                if (!isVideoPlaying) {
+                    loadLiveStreams();
+                }
+            });
+
+            socket.on('stream_ended', (data) => {
+                console.log('Stream ended:', data);
+                if (!isVideoPlaying) {
+                    loadLiveStreams();
+                }
+            });
+
+            socket.on('viewer_count_update', (data) => {
+                console.log('Viewer count update:', data);
+                const viewerCountEl = document.getElementById('viewer-count-number');
+                if (viewerCountEl && currentStream && data.streamKey === currentStream.streamKey) {
+                    viewerCountEl.textContent = data.viewCount || 0;
+                }
+                
+                // Update viewer badge on video
+                const viewerBadgeCount = document.getElementById('viewer-badge-count');
+                if (viewerBadgeCount && currentStream && data.streamKey === currentStream.streamKey) {
+                    viewerBadgeCount.textContent = data.viewCount || 0;
+                }
+            });
+
+            // Load initial data
+            loadLiveStreams();
+        });
+
+        async function checkForLiveStreams() {
+            // Check if video element is visible (means video is playing)
+            const playerEl = document.getElementById('player');
+            if (playerEl && playerEl.style.display === 'block') {
+                console.log('Blocked checkForLiveStreams - video is visible');
+                return; // Video is playing, don't reload
+            }
+            
+            // Check if test-stream HLS file exists
+            try {
+                const response = await fetch(`${MEDIA_URL}/hls/test-stream.m3u8`, { method: 'HEAD' });
+                if (response.ok) {
+                    // Stream is live, update UI to show LIVE NOW
+                    loadLiveStreams();
+                } else {
+                    // Stream ended, show offline message
+                    loadLiveStreams();
+                }
+            } catch (error) {
+                // Stream not available, show offline message
+                loadLiveStreams();
+            }
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content sections
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            
+            if (tab === 'live') {
+                document.getElementById('live-section').classList.add('active');
+                loadLiveStreams();
+            } else if (tab === 'recent') {
+                document.getElementById('recent-section').classList.add('active');
+                loadRecentRecordings();
+            } else if (tab === 'recordings') {
+                document.getElementById('recordings-section').classList.add('active');
+                loadSermonIframe();
+            }
+        }
+
+        async function loadRecentRecordings() {
+            const container = document.getElementById('recent-recordings-container');
+            container.innerHTML = '<p style="color: #718096;">Loading recordings...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/recordings/recent`);
+                const data = await response.json();
+                
+                if (!data.success || data.recordings.length === 0) {
+                    container.innerHTML = '<p style="color: #718096;">No recent recordings found. Start a livestream to create recordings!</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.recordings.map(rec => {
+                    const date = new Date(rec.date);
+                    const dateStr = date.toLocaleDateString('en-GB', { 
+                        day: 'numeric', 
+                        month: 'short', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const sizeMB = (rec.size / (1024 * 1024)).toFixed(1);
+                    
+                    return `
+                        <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <video controls style="width: 100%; background: #000;" preload="metadata">
+                                <source src="${rec.url}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div style="padding: 15px;">
+                                <h3 style="color: #2d3748; margin: 0 0 10px 0; font-size: 16px;">${rec.streamKey}</h3>
+                                <p style="color: #718096; margin: 0 0 5px 0; font-size: 14px;">📅 ${dateStr}</p>
+                                <p style="color: #718096; margin: 0 0 15px 0; font-size: 14px;">💾 ${sizeMB} MB</p>
+                                <button onclick="deleteRecording('${rec.filename}')" style="background: #e53e3e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; width: 100%;">
+                                    🗑️ Delete Recording
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading recent recordings:', error);
+                container.innerHTML = '<p style="color: #e53e3e;">Error loading recordings. Please try again.</p>';
+            }
+        }
+        
+        function stopWatching() {
+            // Stop the video and clean up
+            const playerEl = document.getElementById('player');
+            if (playerEl) {
+                playerEl.pause();
+                playerEl.src = '';
+            }
+            
+            // Destroy HLS instance
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+            
+            // Notify server we stopped watching
+            if (socket && currentStream) {
+                socket.emit('stop_watching', currentStream.streamKey);
+            }
+            
+            // Reset state
+            isVideoPlaying = false;
+            currentStream = null;
+            
+            // Reload the page to show landing page
+            window.location.href = window.location.pathname;
+        }
+        
+        async function deleteRecording(filename) {
+            if (!confirm(`Are you sure you want to delete this recording?\n\n${filename}\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/recordings/${filename}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Recording deleted successfully!');
+                    loadRecentRecordings(); // Reload the list
+                } else {
+                    alert('Error deleting recording: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error deleting recording:', error);
+                alert('Error deleting recording. Please try again.');
+            }
+        }
+
+        function loadSermonIframe() {
+            const container = document.getElementById('sermon-iframe-container');
+            // Only load iframe once
+            if (!container.querySelector('iframe')) {
+                container.innerHTML = `
+                    <iframe 
+                        src="https://wec.sermon.net" 
+                        style="width: 100%; height: 800px; border: none;"
+                        title="Sermon Recordings"
+                        allowfullscreen>
+                    </iframe>
+                `;
+            }
+        }
+
+        async function loadLiveStreams() {
+            // Don't reload if video is playing
+            if (isVideoPlaying) {
+                console.log('Blocked loadLiveStreams - video is playing');
+                return;
+            }
+            
+            const container = document.getElementById('live-stream-container');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading live streams...</div>';
+
+            try {
+                // Check if HLS stream exists and is being actively updated
+                const hlsCheck = await fetch(`${MEDIA_URL}/hls/test-stream.m3u8`, { method: 'HEAD' });
+                
+                if (hlsCheck.ok) {
+                    // Check Last-Modified header to see if file is recent (within last 10 seconds)
+                    const lastModified = hlsCheck.headers.get('Last-Modified');
+                    const fileAge = lastModified ? (Date.now() - new Date(lastModified).getTime()) / 1000 : 999;
+                    
+                    if (fileAge < 10) {
+                        // Stream is actively live (file updated within last 10 seconds)
+                        const stream = { streamKey: 'test-stream', viewCount: 0 };
+                        container.innerHTML = `
+                        <div class="live-stream-hero" id="live-hero" style="background-image: url('WEC.jpg');">
+                            <div id="player-container-live" style="display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 3;"></div>
+                            <div class="live-stream-overlay" id="hero-overlay"></div>
+                            <div class="live-stream-content" id="hero-content">
+                                <div class="live-indicator">🔴 LIVE NOW</div>
+                                <h2>Welwyn Evangelical Church</h2>
+                                <p>Livestream is currently broadcasting</p>
+                                <p style="font-size: 18px; margin-bottom: 30px;">👁️ <span id="viewer-count-display">0</span> watching now</p>
+                                <button class="watch-now-btn" onclick='playLiveStream(${JSON.stringify(stream)})'>
+                                    ▶️ Watch Now
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    } else {
+                        // File exists but is stale (not updated recently) - stream ended
+                        container.innerHTML = `
+                        <div class="live-stream-hero" style="background-image: url('WEC.jpg');">
+                            <div class="live-stream-overlay"></div>
+                            <div class="live-stream-content">
+                                <h2>Welwyn Evangelical Church</h2>
+                                <p>Livestream will start between 5 and 10 minutes before the Sunday morning (11.00am) and evening (6.30pm) services</p>
+                            </div>
+                        </div>
+                    `;
+                    }
+                } else {
+                    // No stream
+                    container.innerHTML = `
+                        <div class="live-stream-hero" style="background-image: url('WEC.jpg');">
+                            <div class="live-stream-overlay"></div>
+                            <div class="live-stream-content">
+                                <h2>Welwyn Evangelical Church</h2>
+                                <p>Livestream will start between 5 and 10 minutes before the Sunday morning (11.00am) and evening (6.30pm) services</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading live streams:', error);
+                // Show offline message instead of error
+                container.innerHTML = `
+                    <div class="live-stream-hero" style="background-image: url('WEC.jpg');">
+                        <div class="live-stream-overlay"></div>
+                        <div class="live-stream-content">
+                            <h2>Welwyn Evangelical Church</h2>
+                            <p>Livestream will start between 5 and 10 minutes before the Sunday morning (11.00am) and evening (6.30pm) services</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadRecordings() {
+            const grid = document.getElementById('recordings-grid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div>Loading recordings...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/streams/recorded`);
+                const data = await response.json();
+
+                if (data.success && data.recordings.length > 0) {
+                    grid.innerHTML = data.recordings.map(recording => `
+                        <div class="stream-card" onclick='playRecording(${JSON.stringify(recording)})'>
+                            <div class="stream-thumbnail">
+                                <span class="badge badge-recorded">RECORDED</span>
+                                📼
+                            </div>
+                            <div class="stream-card-info">
+                                <div class="stream-title">${escapeHtml(recording.title || recording.streamKey)}</div>
+                                <div class="stream-details">
+                                    <span>⏱️ Duration: ${formatDuration(recording.duration)}</span>
+                                    <span>📅 ${formatDate(recording.startTime)}</span>
+                                    <span>👁️ ${recording.viewCount || 0} views</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📼</div>
+                            <h3>No Previous Recordings</h3>
+                            <p>After you finish streaming, your recordings will appear here</p>
+                            <p style="margin-top: 10px; font-size: 12px;">Stream for at least 30 seconds to create a recording</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading recordings:', error);
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Error loading recordings</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function playLiveStream(stream) {
+            currentStream = stream;
+            // Add cache-busting parameter to force fresh content
+            const cacheBuster = Date.now();
+            const streamUrl = `${MEDIA_URL}/hls/${stream.streamKey}.m3u8?t=${cacheBuster}`;
+            
+            console.log('Playing live stream:', streamUrl);
+            
+            // Check if stream is available
+            try {
+                const checkResponse = await fetch(streamUrl, { method: 'HEAD' });
+                if (!checkResponse.ok) {
+                    console.warn('Stream not ready yet, waiting...');
+                    alert('Stream is starting up. Please wait a few seconds and try again.');
+                    return;
+                }
+            } catch (error) {
+                console.error('Stream check failed:', error);
+                alert('Stream is not available yet. Please wait a moment and try again.');
+                return;
+            }
+            
+            // Remove any recording player wrapper if it exists
+            const existingRecordingPlayer = document.querySelector('.recording-player-wrapper');
+            if (existingRecordingPlayer) {
+                existingRecordingPlayer.remove();
+            }
+            
+            // Clear the entire container and show player
+            const container = document.getElementById('live-stream-container');
+            const playerEl = document.getElementById('player');
+            const liveSection = document.getElementById('live-section');
+            
+            // Clear all content from container
+            if (container) {
+                container.innerHTML = '';
+            }
+            
+            if (playerEl) {
+                playerEl.style.display = 'block';
+                playerEl.style.width = '100%';
+                playerEl.style.height = 'auto';
+                playerEl.style.aspectRatio = '16/9';
+            }
+            
+            // Show viewer badge
+            const viewerBadge = document.getElementById('viewer-badge');
+            if (viewerBadge) {
+                viewerBadge.style.display = 'flex';
+            }
+            
+            // Show Stop Watching button
+            const stopBtn = document.getElementById('stop-watching-btn');
+            if (stopBtn) {
+                stopBtn.style.display = 'block';
+            }
+            
+            // Hide recordings section while video is playing
+            const recordingsSection = document.getElementById('recordings-section');
+            if (recordingsSection) {
+                recordingsSection.style.display = 'none';
+            }
+            
+            // Set flag to stop polling from reloading content
+            isVideoPlaying = true;
+            
+            // Stop polling interval
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+            
+            // Make live section container responsive
+            if (liveSection) {
+                liveSection.style.margin = '0 auto';
+                liveSection.style.padding = '20px';
+            }
+
+            // Destroy existing hls instance if any
+            if (hls) {
+                hls.destroy();
+            }
+
+            // Use hls.js
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    debug: false,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+                
+                hls.loadSource(streamUrl);
+                hls.attachMedia(playerEl);
+                
+                // Monitor video progress - if stuck for 10 seconds, stream ended
+                let lastTime = 0;
+                let stuckCount = 0;
+                const progressCheck = setInterval(() => {
+                    const currentTime = playerEl.currentTime;
+                    if (currentTime === lastTime && !playerEl.paused) {
+                        stuckCount++;
+                        console.log(`Video stuck for ${stuckCount} seconds`);
+                        if (stuckCount >= 10) {
+                            console.log('Video stuck for 10 seconds - stream ended');
+                            clearInterval(progressCheck);
+                            hls.destroy();
+                            window.location.href = window.location.pathname;
+                        }
+                    } else {
+                        stuckCount = 0;
+                    }
+                    lastTime = currentTime;
+                }, 1000);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log('HLS manifest parsed, starting playback');
+                    playerEl.play().then(() => {
+                        socket.emit('start_watching', stream.streamKey);
+                        console.log('Started watching stream:', stream.streamKey);
+                    }).catch(e => {
+                        console.error('Autoplay failed:', e);
+                    });
+                });
+                
+                let fragmentErrorCount = 0;
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS error:', data);
+                    
+                    // Detect fragment/segment load errors - means stream ended
+                    if (data.details === 'fragLoadError' || data.details === 'levelLoadError') {
+                        fragmentErrorCount++;
+                        console.log(`Fragment load error count: ${fragmentErrorCount}`);
+                        
+                        if (fragmentErrorCount >= 2) {
+                            console.log('Stream ended - reloading page');
+                            hls.destroy();
+                            window.location.href = window.location.pathname;
+                            return;
+                        }
+                    }
+                    
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log('Fatal network error - stream ended');
+                                hls.destroy();
+                                window.location.href = window.location.pathname;
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log('Media error, attempting to recover...');
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                console.error('Fatal error, destroying player');
+                                hls.destroy();
+                                break;
+                        }
+                    }
+                });
+            } else if (playerEl.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari)
+                playerEl.src = streamUrl;
+                playerEl.addEventListener('loadedmetadata', function() {
+                    playerEl.play().then(() => {
+                        socket.emit('start_watching', stream.streamKey);
+                        console.log('Started watching stream:', stream.streamKey);
+                    }).catch(e => {
+                        console.error('Autoplay failed:', e);
+                    });
+                });
+            }
+        }
+
+        function playStream(stream, isLive) {
+            if (isLive) {
+                playLiveStream(stream);
+            } else {
+                playRecording(stream);
+            }
+        }
+
+        function playRecording(recording) {
+            currentStream = recording;
+            const streamUrl = `${MEDIA_URL}/live/${recording.streamKey}/index.m3u8`;
+            
+            // Insert player at top of recordings section
+            const recordingsSection = document.getElementById('recordings-section');
+            const existingPlayer = recordingsSection.querySelector('.recording-player-wrapper');
+            if (existingPlayer) {
+                existingPlayer.remove();
+            }
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = 'recording-player-wrapper';
+            wrapper.style.cssText = 'background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            wrapper.innerHTML = `
+                <h3 style="color: #2d3748; margin-bottom: 10px;">📼 ${escapeHtml(recording.title || recording.streamKey)}</h3>
+                <div id="recording-player-container"></div>
+            `;
+            recordingsSection.insertBefore(wrapper, recordingsSection.firstChild);
+            
+            // Move player element and reset its styles
+            const playerEl = document.getElementById('player');
+            playerEl.style.display = 'block';
+            playerEl.style.width = '100%';
+            playerEl.style.height = 'auto';
+            playerEl.style.aspectRatio = '16/9';
+            playerEl.style.position = 'relative';
+            
+            // Append to container
+            const container = document.getElementById('recording-player-container');
+            container.appendChild(playerEl);
+            
+            // Pause and reset player before loading new source
+            player.pause();
+            player.reset();
+
+            player.src({
+                src: streamUrl,
+                type: 'application/x-mpegURL'
+            });
+
+            player.ready(function() {
+                player.play().catch(error => {
+                    console.error('Playback error:', error);
+                    alert('Unable to play recording.');
+                });
+            });
+            
+            // Scroll to player
+            wrapper.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function shareCurrentStream() {
+            if (!currentStream) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/streams/${currentStream.streamId}/share`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    await navigator.clipboard.writeText(data.shareUrl);
+                    alert('Share link copied to clipboard!\n\n' + data.shareUrl);
+                }
+            } catch (error) {
+                console.error('Error sharing stream:', error);
+                // Fallback: copy current page URL
+                const shareUrl = window.location.href;
+                await navigator.clipboard.writeText(shareUrl);
+                alert('Link copied to clipboard!');
+            }
+        }
+
+        function formatTime(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return 'N/A';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            if (minutes > 0) return `${minutes}m ${secs}s`;
+            return `${secs}s`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-refresh live streams every 30 seconds
+        setInterval(() => {
+            if (document.getElementById('live-section').classList.contains('active')) {
+                loadLiveStreams();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
